@@ -16,7 +16,7 @@ const devicesApi = (req: NextApiRequest, res: NextApiResponse) => {
     const telemetryData = getTelemetryData(String(uuid));
 
     res.status(200).json({
-      device: telemetryData,
+      telemetry: telemetryData,
     });
     return;
   }
