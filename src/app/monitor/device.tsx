@@ -1,11 +1,13 @@
 "use client";
 
 import { DeviceData, TelemetryData } from "@/pages/api/data";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Line, LineConfig } from "@ant-design/plots";
+import { Dropdown, Space } from "antd";
 
 export default function Device({ device }: { device: DeviceData | null }) {
   const [, setTelemetryData] = useState<TelemetryData[]>([]);
+  const [deviceData, setDeviceData] = useState<DeviceData | null>(device);
   const [telemetryConfig, setTelemetryConfig] = useState<LineConfig>({
     autoFit: true,
     data: [],
@@ -15,7 +17,10 @@ export default function Device({ device }: { device: DeviceData | null }) {
   });
 
   useEffect(() => {
-    console.log(`/api/device/${device?.uuid}`);
+    setDeviceData(device);
+  }, [device]);
+
+  useEffect(() => {
     if (device) {
       fetch(`/api/device/${device?.uuid}`)
         .then((res) => res.json())
@@ -76,14 +81,74 @@ export default function Device({ device }: { device: DeviceData | null }) {
     }
   }, [device]);
 
-  if (!device || !telemetryConfig) {
+  const mutateDevice = useMemo(
+    () => (data: Partial<DeviceData>) => {
+      if (!deviceData) {
+        return;
+      }
+
+      fetch(`/api/device/${deviceData?.uuid}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }).then((res) => {
+        if (res.status === 200) {
+          res.json().then((data) => {
+            setDeviceData(data.device);
+          });
+        }
+      });
+    },
+    [deviceData]
+  );
+
+  if (!deviceData || !telemetryConfig) {
     return false;
   }
 
   return (
     <div className="font-mono">
       <div className="flex flex-col items-center justify-top p-24 text-lg">
-        {device.uuid}
+        {deviceData.uuid}
+        <div className="text-lg text-align-left">
+          Status: {deviceData.status}
+        </div>
+        <Space />
+        <div className="">State: {deviceData.state || "working hard"}</div>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "1",
+                label: "Work",
+                style: {
+                  backgroundColor: "black",
+                  color: "white",
+                },
+                onClick: () => {
+                  mutateDevice({ ...deviceData, state: "working hard" });
+                },
+                disabled: deviceData.state === "working hard",
+              },
+              {
+                key: "2",
+                label: "Pause",
+                style: {
+                  backgroundColor: "black",
+                  color: "white",
+                },
+                onClick: () => {
+                  mutateDevice({ ...deviceData, state: "pausing hard" });
+                },
+              },
+            ],
+            className: "bg-gray-700",
+          }}
+        >
+          <button className="text-lg">
+            <a>Change State</a>
+          </button>
+        </Dropdown>
+        <Space />
         <Line {...telemetryConfig}></Line>
       </div>
     </div>

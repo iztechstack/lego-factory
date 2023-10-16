@@ -1,4 +1,5 @@
 export type DeviceData = {
+  state?: "working hard" | "pausing hard";
   uuid: string;
   type: string;
   status: "online" | "offline";

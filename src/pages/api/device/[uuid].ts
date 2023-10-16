@@ -25,18 +25,19 @@ const devicesApi = (req: NextApiRequest, res: NextApiResponse) => {
     const {
       query: { uuid },
     } = req;
-    const { status } = req.body;
+    const { state } = JSON.parse(req.body);
     const deviceIndex = randomData.findIndex((device) => device.uuid === uuid);
 
-    if (!status) {
+    if (!state) {
       res.status(400).json({
-        message: "Status not provided in body",
+        message: "state not provided in body",
+        body: req.body || {},
       });
       return;
     }
 
     if (deviceIndex !== -1) {
-      randomData[deviceIndex].status = status;
+      randomData[deviceIndex].state = state;
     } else {
       res.status(404).json({
         message: "Device not found.",

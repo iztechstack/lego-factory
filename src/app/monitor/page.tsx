@@ -44,7 +44,6 @@ export default function Monitor() {
     fetch("/api/devices")
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
         setDevices(data.devices);
       });
   }, []);
